@@ -6,6 +6,7 @@ add_library_unity(
   chr.cpp
   damerau_levenshtein.cpp
   format_bytes.cpp
+  get_separator.cpp
   hamming.cpp
   hex.cpp
   instr.cpp

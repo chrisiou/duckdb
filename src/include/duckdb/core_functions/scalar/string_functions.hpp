@@ -114,6 +114,15 @@ struct FormatreadabledecimalsizeFun {
 	static ScalarFunction GetFunction();
 };
 
+struct GetSeparatorFun {
+	static constexpr const char *Name = "get_separator";
+	static constexpr const char *Parameters = "separator_option,return_regex";
+	static constexpr const char *Description = "Returns the corresponding slash character of the separator_option: system, both_slash (default), forward_slash, backward_slash. If return_regex is true (default), returns the result as regex.";
+	static constexpr const char *Example = "get_separator('system', false)";
+
+	static ScalarFunctionSet GetFunctions();
+};
+
 struct HammingFun {
 	static constexpr const char *Name = "hamming";
 	static constexpr const char *Parameters = "str1,str2";

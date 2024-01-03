@@ -1,0 +1,78 @@
+# name: test/sql/function/string/get_separator.test
+# description: Test the get_separator function
+# group: [string]
+
+statement ok
+PRAGMA enable_verification
+
+# TODO: test windows as well
+query T
+SELECT get_separator('system');
+----
+[\/]
+
+query T
+SELECT get_separator('system', true);
+----
+[\/]
+
+query T
+SELECT get_separator('system', false);
+----
+/
+
+query T
+SELECT get_separator('both_slash');
+----
+[\/\\]
+
+query T
+SELECT get_separator('both_slash', false);
+----
+/\
+
+query T
+SELECT get_separator('forward_slash');
+----
+[\/]
+
+query T
+SELECT get_separator('forward_slash', false);
+----
+/
+
+query T
+SELECT get_separator('backward_slash');
+----
+[\\]
+
+query T
+SELECT get_separator('backward_slash', false);
+----
+\
+
+# default values
+query T
+SELECT get_separator('');
+----
+[\/\\]
+
+query T
+SELECT get_separator('123@$%abcABC');
+----
+[\/\\]
+
+query T
+SELECT get_separator(true);
+----
+[\/\\]
+
+query T
+SELECT get_separator();
+----
+[\/\\]
+
+query T
+SELECT get_separator(NULL);
+----
+NULL
