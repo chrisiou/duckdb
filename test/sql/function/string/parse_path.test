@@ -1,0 +1,75 @@
+# name: test/sql/function/string/parse_path.test
+# description: parse path functions test
+# group: [string]
+
+statement ok
+PRAGMA enable_verification
+
+# TODO: test also windows
+query T
+SELECT parse_path('home/user/documents/file.csv', 'system');
+----
+[home, user, documents, file.csv]
+
+query T
+SELECT parse_path('home/user/documents/file.csv', 'both_slash');
+----
+[home, user, documents, file.csv]
+
+query T
+SELECT parse_path('C:\Users\User\Documents\File.csv', 'both_slash');
+----
+[C:, Users, User, Documents, File.csv]
+
+query T
+SELECT parse_path('/home/user/documents/file.csv', 'forward_slash');
+----
+[, home, user, documents, file.csv]
+
+query T
+SELECT parse_path('C:\Users\User\Documents\File.csv', 'backslash');
+----
+[C:, Users, User, Documents, File.csv]
+
+# no seperator in path
+query T
+SELECT parse_path('file.csv', 'backslash');
+----
+[file.csv]
+
+# consecutive separators 
+query T
+SELECT parse_path('home/user/documents//file.csv', 'forward_slash');
+----
+[home, user, documents, , file.csv]
+
+# special characters
+query T
+SELECT parse_path('home\wh@t3ve%\42/12 ch,ars.sth', 'both_slash');
+----
+[home, wh@t3ve%, 42, 12 ch,ars.sth]
+
+query T
+SELECT parse_path('', 'both_slash');
+----
+[]
+
+query T
+SELECT parse_path(NULL, NULL);
+----
+NULL
+
+# custom seperator
+query T
+SELECT parse_path('home/user/documents/file.csv','@');
+----
+[home, user, documents, file.csv]
+
+# test incorrect usage
+statement error
+SELECT parse_path();
+----
+
+statement error
+SELECT parse_path('home/user/documents/file.csv');
+----

@@ -16,7 +16,7 @@ static string_t SeparatorGetter(const string_t &input, const bool as_regex) {
 		separator = system_sep;
 	} else if (option == "forward_slash") {
 		separator = "/";
-	} else if (option == "backward_slash") {
+	} else if (option == "backslash") {
 		separator = "\\";
 	} else { // (default) both_slash
 		separator = "/\\";
@@ -45,7 +45,6 @@ static void GetSeparatorFunction(DataChunk &args, ExpressionState &state, Vector
 
 ScalarFunctionSet GetSeparatorFun::GetFunctions() {
 	ScalarFunctionSet get_sep;
-	get_sep.AddFunction(ScalarFunction({}, LogicalType::VARCHAR, GetSeparatorFunction));
 	get_sep.AddFunction(ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, GetSeparatorFunction));
 	get_sep.AddFunction(
 	    ScalarFunction({LogicalType::VARCHAR, LogicalType::BOOLEAN}, LogicalType::VARCHAR, GetSeparatorFunction));

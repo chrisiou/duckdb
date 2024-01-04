@@ -42,12 +42,12 @@ SELECT get_separator('forward_slash', false);
 /
 
 query T
-SELECT get_separator('backward_slash');
+SELECT get_separator('backslash');
 ----
 [\\]
 
 query T
-SELECT get_separator('backward_slash', false);
+SELECT get_separator('backslash', false);
 ----
 \
 
