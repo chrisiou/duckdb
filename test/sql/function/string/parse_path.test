@@ -73,3 +73,111 @@ SELECT parse_path();
 statement error
 SELECT parse_path('home/user/documents/file.csv');
 ----
+
+
+# test parse_dirname
+query T
+SELECT parse_dirname('home/user/documents/file.csv', 'system');
+----
+home
+
+query T
+SELECT parse_dirname('home/user/documents/file.csv', 'both_slash');
+----
+home
+
+query T
+SELECT parse_dirname('home/user/documents/file.csv', 'forward_slash');
+----
+home
+
+query T
+SELECT parse_dirname('C:\Users\User\Documents\File.csv', 'backslash');
+----
+C:
+
+# no separator
+query T
+SELECT parse_dirname('file.csv', 'both_slash');
+----
+file.csv
+
+query T
+SELECT parse_dirname('\home\docs', 'both_slash');
+----
+(empty)
+
+query T
+SELECT parse_dirname('home/user/documents/file.csv','@');
+----
+home
+
+# test incorrect usage
+statement error
+SELECT parse_dirname('file.csv');
+----
+
+# parse path with special characters
+query T
+SELECT parse_dirname('wh@t3ve%\42\12 ch,ars.sth', 'both_slash');
+----
+wh@t3ve%
+
+
+# test parse_filename
+query T
+SELECT parse_filename('home/user/documents/file.csv', 'system');
+----
+file.csv
+
+query T
+SELECT parse_filename('home/user/documents/file.csv', 'both_slash');
+----
+file.csv
+
+query T
+SELECT parse_filename('C:\Users\User\Documents\File.csv', 'both_slash');
+----
+File.csv
+
+query T
+SELECT parse_filename('home/user/documents/file.csv', 'forward_slash');
+----
+file.csv
+
+query T
+SELECT parse_filename('C:\Users\User\Documents\File.csv', 'backslash');
+----
+File.csv
+
+# no separator
+query T
+SELECT parse_filename('file.csv', 'both_slash');
+----
+file.csv
+
+query T
+SELECT parse_filename('home\docs\', 'both_slash');
+----
+(empty)
+
+query T
+SELECT parse_filename('home/user/documents/file.csv','@');
+----
+file.csv
+
+# test incorrect usage
+statement error
+SELECT parse_filename('file.csv');
+----
+
+# parse path with special characters
+query T
+SELECT parse_filename('wh@t3ve%\42\12 ch,ars.sth', 'both_slash');
+----
+12 ch,ars.sth
+
+query T
+SELECT parse_filename('', 'both_slash');
+----
+(empty)

@@ -147,6 +147,8 @@ static DefaultMacro internal_macros[] = {
 
 	// file path parsing function
 	{DEFAULT_SCHEMA, "parse_path", {"path", "separator_option", nullptr}, "string_split_regex(path, get_separator(separator_option))"},
+	{DEFAULT_SCHEMA, "parse_dirname", {"path", "separator_option", nullptr}, "list_extract(parse_path(path, separator_option), 1)"},
+	{DEFAULT_SCHEMA, "parse_filename", {"path", "separator_option", nullptr}, "list_extract(list_slice(parse_path(path, separator_option), -1, -1), 1)"},
 
 	// holistic list aggregates
 	{DEFAULT_SCHEMA, "list_mode", {"l", nullptr}, "list_aggr(l, 'mode')"},
