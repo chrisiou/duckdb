@@ -1,0 +1,62 @@
+# name: test/sql/function/string/parse_path_windows.test
+# description: test parse path functions in windows
+# group: [string]
+
+statement ok
+PRAGMA enable_verification
+
+require windows
+
+query T
+SELECT parse_path('C:\Users\User\Documents\File.csv', 'system');
+----
+[C:, Users, User, Documents, File.csv]
+
+query T
+SELECT parse_path('home/user/documents/file.csv\file2.csv', 'both_slash');
+----
+[home, user, documents, file.csv, file2.csv]
+
+query T
+SELECT parse_path('/home/user/documents/file.csv', 'forward_slash');
+----
+[, home, user, documents, file.csv]
+
+query T
+SELECT parse_path('C:\Users\User\Documents\File.csv', 'backslash');
+----
+[C:, Users, User, Documents, File.csv]
+
+# test incorrect usage
+statement error
+SELECT parse_path();
+----
+
+statement error
+SELECT parse_path('home/user/documents/file.csv');
+----
+
+
+# test parse_dirname
+query T
+SELECT parse_dirname('C:\Users\User\Documents\File.csv', 'system');
+----
+C:
+
+# test incorrect usage
+statement error
+SELECT parse_dirname('file.csv');
+----
+
+
+# test parse_filename
+query T
+SELECT parse_filename('C:\Users\User\Documents\File.csv', 'system');
+----
+File.csv
+
+# test incorrect usage
+statement error
+SELECT parse_filename('file.csv');
+----
+

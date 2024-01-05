@@ -4,7 +4,7 @@
 
 namespace duckdb {
 
-static string_t SeparatorGetter(const string_t &input, const bool as_regex) {
+static string_t SeparatorGetter(const string_t &input, const bool return_regex) {
 	auto option = input.GetString();
 
 	// system's path separator
@@ -22,7 +22,7 @@ static string_t SeparatorGetter(const string_t &input, const bool as_regex) {
 		separator = "/\\";
 	}
 
-	if (as_regex) {
+	if (return_regex) {
 		separator = '[' + RE2::QuoteMeta(separator) + ']';
 	}
 
@@ -40,7 +40,7 @@ static void GetSeparatorFunction(DataChunk &args, ExpressionState &state, Vector
 	auto &regex_vector = args.data[1];
 	BinaryExecutor::Execute<string_t, bool, string_t>(
 	    sep_vector, regex_vector, result, args.size(),
-	    [&](string_t sep, bool as_regex) { return StringVector::AddString(result, SeparatorGetter(sep, as_regex)); });
+	    [&](string_t sep, bool return_regex) { return StringVector::AddString(result, SeparatorGetter(sep, return_regex)); });
 }
 
 ScalarFunctionSet GetSeparatorFun::GetFunctions() {
