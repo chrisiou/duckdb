@@ -5,7 +5,8 @@
 statement ok
 PRAGMA enable_verification
 
-# TODO: test windows as well
+require notwindows
+
 query T
 SELECT get_separator('system');
 ----
@@ -68,11 +69,13 @@ SELECT get_separator(true);
 [\/\\]
 
 query T
-SELECT get_separator();
-----
-[\/\\]
-
-query T
 SELECT get_separator(NULL);
 ----
 NULL
+
+require windows
+
+query T
+SELECT get_separator('system');
+----
+[\\]

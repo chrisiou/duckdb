@@ -39,8 +39,9 @@ static void GetSeparatorFunction(DataChunk &args, ExpressionState &state, Vector
 	auto &sep_vector = args.data[0];
 	auto &regex_vector = args.data[1];
 	BinaryExecutor::Execute<string_t, bool, string_t>(
-	    sep_vector, regex_vector, result, args.size(),
-	    [&](string_t sep, bool return_regex) { return StringVector::AddString(result, SeparatorGetter(sep, return_regex)); });
+	    sep_vector, regex_vector, result, args.size(), [&](string_t sep, bool return_regex) {
+		    return StringVector::AddString(result, SeparatorGetter(sep, return_regex));
+	    });
 }
 
 ScalarFunctionSet GetSeparatorFun::GetFunctions() {
