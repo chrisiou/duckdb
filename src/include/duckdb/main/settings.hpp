@@ -496,15 +496,15 @@ struct ExportLargeBufferArrow {
 	static Value GetSetting(ClientContext &context);
 };
 
-struct ProfilerHistorySize {
-	static constexpr const char *Name = "profiler_history_size";
-	static constexpr const char *Description = "Sets the profiler history size";
-	static constexpr const LogicalTypeId InputType = LogicalTypeId::BIGINT;
-	static void SetLocal(ClientContext &context, const Value &parameter);
-	static void ResetLocal(ClientContext &context);
+struct ProduceArrowStringView {
+	static constexpr const char *Name = "produce_arrow_string_view";
+	static constexpr const char *Description =
+	    "If strings should be produced by DuckDB in Utf8View format instead of Utf8";
+	static constexpr const LogicalTypeId InputType = LogicalTypeId::BOOLEAN;
+	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
+	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
 	static Value GetSetting(ClientContext &context);
 };
-
 struct ProfileOutputSetting {
 	static constexpr const char *Name = "profile_output";
 	static constexpr const char *Description =

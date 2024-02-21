@@ -5,6 +5,7 @@
 #include "duckdb/common/types/arrow_aux_data.hpp"
 #include "duckdb/function/scalar/nested_functions.hpp"
 #include "duckdb/common/exception/conversion_exception.hpp"
+#include "duckdb/common/types/arrow_string_view_type.hpp"
 
 namespace duckdb {
 
@@ -294,6 +295,35 @@ static void SetVectorString(Vector &vector, idx_t size, char *cdata, T *offsets)
 	}
 }
 
+static void SetVectorStringView(Vector &vector, idx_t size, ArrowArray &array, idx_t current_pos) {
+	auto strings = FlatVector::GetData<string_t>(vector);
+	auto arrow_string = ArrowBufferData<arrow_string_view_t>(array, 1) + current_pos;
+
+	for (idx_t row_idx = 0; row_idx < size; row_idx++) {
+		if (FlatVector::IsNull(vector, row_idx)) {
+			continue;
+		}
+		int32_t length = arrow_string[row_idx].Length();
+		if (arrow_string[row_idx].IsInline()) {
+			//	This string is inlined
+			//  | Bytes 0-3  | Bytes 4-15                            |
+			//  |------------|---------------------------------------|
+			//  | length     | data (padded with 0)                  |
+			strings[row_idx] = string_t(arrow_string[row_idx].GetInlineData(), length);
+		} else {
+			//  This string is not inlined, we have to check a different buffer and offsets
+			//  | Bytes 0-3  | Bytes 4-7  | Bytes 8-11 | Bytes 12-15 |
+			//  |------------|------------|------------|-------------|
+			//  | length     | prefix     | buf. index | offset      |
+			int32_t buffer_index = arrow_string[row_idx].GetBufferIndex();
+			int32_t offset = arrow_string[row_idx].GetOffset();
+			D_ASSERT(array.n_buffers > 2 + buffer_index);
+			auto c_data = ArrowBufferData<char>(array, 2 + buffer_index);
+			strings[row_idx] = string_t(&c_data[offset], length);
+		}
+	}
+}
+
 static void DirectConversion(Vector &vector, ArrowArray &array, const ArrowScanLocalState &scan_state,
                              int64_t nested_offset, uint64_t parent_offset) {
 	auto internal_type = GetTypeIdSize(vector.GetType().InternalType());
@@ -372,30 +402,31 @@ static void IntervalConversionMonthDayNanos(Vector &vector, ArrowArray &array, c
 	}
 }
 
+// Find the index of the first run-end that is strictly greater than the offset.
+// count is returned if no such run-end is found.
 template <class RUN_END_TYPE>
 static idx_t FindRunIndex(const RUN_END_TYPE *run_ends, idx_t count, idx_t offset) {
+	// Binary-search within the [0, count) range. For example:
+	// [0, 0, 0, 1, 1, 2] encoded as
+	// run_ends: [3, 5, 6]:
+	// 0, 1, 2 -> 0
+	//    3, 4 -> 1
+	//       5 -> 2
+	// 6, 7 .. -> 3 (3 == count [not found])
 	idx_t begin = 0;
-	idx_t end = count - 1;
+	idx_t end = count;
 	while (begin < end) {
-		idx_t middle = static_cast<idx_t>(std::floor((begin + end) / 2));
+		idx_t middle = (begin + end) / 2;
+		// begin < end implies middle < end
 		if (offset >= static_cast<idx_t>(run_ends[middle])) {
-			// Our offset starts after this run has ended
+			// keep searching in [middle + 1, end)
 			begin = middle + 1;
 		} else {
-			// This offset might fall into this run_end
-			if (middle == 0) {
-				return middle;
-			}
-			if (offset >= static_cast<idx_t>(run_ends[middle - 1])) {
-				// For example [0, 0, 0, 1, 1, 2]
-				// encoded as run_ends: [3, 5, 6]
-				// 3 (run_ends[0]) >= offset < 5 (run_ends[1])
-				return middle;
-			}
-			end = middle - 1;
+			// offset < run_ends[middle], so keep searching in [begin, middle)
+			end = middle;
 		}
 	}
-	return end;
+	return begin;
 }
 
 template <class RUN_END_TYPE, class VALUE_TYPE>
@@ -643,15 +674,27 @@ static void ColumnArrowToDuckDB(Vector &vector, ArrowArray &array, ArrowArraySca
 	}
 	case LogicalTypeId::VARCHAR: {
 		auto size_type = arrow_type.GetSizeType();
-		auto cdata = ArrowBufferData<char>(array, 2);
-		if (size_type == ArrowVariableSizeType::SUPER_SIZE) {
+		switch (size_type) {
+		case ArrowVariableSizeType::SUPER_SIZE: {
+			auto cdata = ArrowBufferData<char>(array, 2);
 			auto offsets = ArrowBufferData<uint64_t>(array, 1) +
 			               GetEffectiveOffset(array, parent_offset, scan_state, nested_offset);
 			SetVectorString(vector, size, cdata, offsets);
-		} else {
+			break;
+		}
+		case ArrowVariableSizeType::NORMAL:
+		case ArrowVariableSizeType::FIXED_SIZE: {
+			auto cdata = ArrowBufferData<char>(array, 2);
 			auto offsets = ArrowBufferData<uint32_t>(array, 1) +
 			               GetEffectiveOffset(array, parent_offset, scan_state, nested_offset);
 			SetVectorString(vector, size, cdata, offsets);
+			break;
+		}
+		case ArrowVariableSizeType::VIEW: {
+			SetVectorStringView(vector, size, array,
+			                    GetEffectiveOffset(array, parent_offset, scan_state, nested_offset));
+			break;
+		}
 		}
 		break;
 	}

@@ -79,7 +79,6 @@ OptionValueSet &GetValueForOption(const string &name) {
 	    {"enable_progress_bar", {true}},
 	    {"errors_as_json", {true}},
 	    {"explain_output", {{"all", "optimized_only", "physical_only"}}},
-	    {"external_threads", {8}},
 	    {"file_search_path", {"test"}},
 	    {"force_compression", {"uncompressed", "Uncompressed"}},
 	    {"home_directory", {"test"}},
@@ -106,7 +105,8 @@ OptionValueSet &GetValueForOption(const string &name) {
 	    {"enable_http_metadata_cache", {true}},
 	    {"force_bitpacking_mode", {"constant"}},
 	    {"allocator_flush_threshold", {"4.0 GiB"}},
-	    {"arrow_large_buffer_size", {true}}};
+	    {"arrow_large_buffer_size", {true}},
+	    {"produce_arrow_string_view", {true}}};
 	// Every option that's not excluded has to be part of this map
 	if (!value_map.count(name)) {
 		REQUIRE(name == "MISSING_FROM_MAP");
@@ -129,8 +129,8 @@ bool OptionIsExcludedFromTest(const string &name) {
 	    "password",
 	    "username",
 	    "user",
+	    "external_threads", // tested in test_threads.cpp
 	    "profiling_output", // just an alias
-	    "profiler_history_size",
 	    "duckdb_api",
 	    "custom_user_agent"};
 	return excluded_options.count(name) == 1;

@@ -120,8 +120,9 @@ struct DBConfigOptions {
 	idx_t maximum_memory = (idx_t)-1;
 	//! The maximum amount of CPU threads used by the database system. Default: all available.
 	idx_t maximum_threads = (idx_t)-1;
-	//! The number of external threads that work on DuckDB tasks. Default: none.
-	idx_t external_threads = 0;
+	//! The number of external threads that work on DuckDB tasks. Default: 1.
+	//! Must be smaller or equal to maximum_threads.
+	idx_t external_threads = 1;
 	//! Whether or not to create and use a temporary directory to store intermediates that do not fit in memory
 	bool use_temporary_directory = true;
 	//! Directory to store temporary structures that do not fit in memory
@@ -161,6 +162,8 @@ struct DBConfigOptions {
 	bool preserve_insertion_order = true;
 	//! Whether Arrow Arrays use Large or Regular buffers
 	ArrowOffsetSize arrow_offset_size = ArrowOffsetSize::REGULAR;
+	//! Whether when producing arrow objects we produce string_views or regular strings
+	bool produce_arrow_string_views = false;
 	//! Database configuration variables as controlled by SET
 	case_insensitive_map_t<Value> set_variables;
 	//! Database configuration variable default values;
@@ -274,7 +277,6 @@ public:
 	DUCKDB_API CastFunctionSet &GetCastFunctions();
 	DUCKDB_API IndexTypeSet &GetIndexTypes();
 	static idx_t GetSystemMaxThreads(FileSystem &fs);
-	void SetDefaultMaxThreads();
 	void SetDefaultMaxMemory();
 
 	OrderType ResolveOrder(OrderType order_type) const;
