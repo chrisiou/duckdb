@@ -88,7 +88,7 @@ def get_new_setting_def(setting):
     if setting.scope == "LOCAL" or setting.scope == "GLOBAL_LOCAL":
         if setting.add_verification_in_SET:
             new_setting += (
-                f"bool {setting.struct_name}::VerifyDBInstanceSET(ClientContext &context, const Value &input) {{\n"
+                f"bool {setting.struct_name}::VerifySet(ClientContext &context, const Value &input) {{\n"
             )
             new_setting += SRC_CODE_IMPLEMENTATION_COMMENT + "}\n\n"
         if setting.add_verification_in_RESET:
@@ -106,7 +106,7 @@ def create_content_for_custom_funcs(custom_settings_path, existing_settings, mis
 
     For each setting:
       - If the setting is missing, it generates the appropriate code.
-      - For global or local settings, it adds the necessary VerifyDBInstanceSET and VerifyDBInstanceRESET functions.
+      - For global or local settings, it adds the necessary VerifySet and VerifyDBInstanceRESET functions.
       - If a custom value conversion is needed, the corresponding function is generated.
     - If the setting already exists, it copies its content from the source file.
     """
@@ -130,10 +130,10 @@ def create_content_for_custom_funcs(custom_settings_path, existing_settings, mis
                 new += 1
             if setting.add_verification_in_SET:
                 if setting.scope == "GLOBAL":
-                    new_content += f"bool {setting.struct_name}::VerifyDBInstanceSET(DatabaseInstance *db, DBConfig &config, const Value &input) {{\n"
+                    new_content += f"bool {setting.struct_name}::VerifySet(DatabaseInstance *db, DBConfig &config, const Value &input) {{\n"
                     new_content += SRC_CODE_IMPLEMENTATION_COMMENT + "}\n\n"
                 if setting.scope == "LOCAL":
-                    new_content += f"bool {setting.struct_name}::VerifyDBInstanceSET(ClientContext &context, const Value &input) {{\n"
+                    new_content += f"bool {setting.struct_name}::VerifySet(ClientContext &context, const Value &input) {{\n"
                     new_content += SRC_CODE_IMPLEMENTATION_COMMENT + "}\n\n"
             if setting.add_verification_in_RESET:
                 if setting.scope == "GLOBAL":
